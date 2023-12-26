@@ -67,7 +67,33 @@ struct Graph
     }
 };
 
-sequence<int> bfs_sequential(const Graph &graph, int start)
+
+struct _Graph
+{
+    sequence<sequence<int>> _adjacency_list;
+    int vertices;
+
+    _Graph(sequence<sequence<int>> __adjacency_list)
+    {
+        _adjacency_list = __adjacency_list;
+        vertices = __adjacency_list.size();
+    }
+
+
+    sequence<int> adjacency_list(int v) const
+    {
+        return _adjacency_list[v];
+    }
+
+    size_t adjacency_list_size(int v) const
+    {
+        return _adjacency_list[v].size();
+    }
+};
+
+
+template <typename G>
+sequence<int> bfs_sequential(const G &graph, int start)
 {
     queue<int> queue;
     queue.push(start);
@@ -113,7 +139,8 @@ void print(sequence<size_t> s)
     cout << endl;
 }
 
-sequence<int> bfs_parallel(const Graph &graph, int start)
+template <typename G>
+sequence<int> bfs_parallel(const G &graph, int start)
 {
     sequence<int> frontier;
     frontier.push_back(start);
@@ -174,12 +201,10 @@ void Experiment()
                   << std::chrono::duration_cast<std::chrono::milliseconds>(finish - start).count() << "ms" << std::endl;
         sequential_duration += std::chrono::duration_cast<std::chrono::milliseconds>(finish - start).count();
 
-        // for (size_t i = 0; i < d_par.size(); ++i)
-        // {
-        //     // cout << "d_par[" << i << "] = " << d_par[i] << endl;
-        //     // cout << "d_seq[" << i << "] = " << d_seq[i] << endl;
-        //     assert(d_par[i] == d_seq[i]);
-        // }
+        for (size_t i = 0; i < d_par.size(); ++i)
+        {
+            assert(d_par[i] == d_seq[i]);
+        }
     }
 
     double average_parallel_result = double(parallel_duration) / double(RUNS);
@@ -189,7 +214,20 @@ void Experiment()
     std::cout << "Boost: " << average_sequential_result / average_parallel_result << "\n";
 }
 
+void Test() {
+    _Graph graph({{1, 2}, {2, 3}, {3}, {4}, {0, 1, 5}, {}});
+    int s = 0;
+    auto d_par = bfs_parallel(graph, s);
+    auto d_seq = bfs_sequential(graph, s);
+
+    for (size_t i = 0; i < d_par.size(); ++i)
+    {
+        assert(d_par[i] == d_seq[i]);
+    }
+}
+
 int main()
 {
     Experiment();
+    Test();
 }
